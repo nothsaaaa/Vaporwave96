@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Raytracer Demo</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vaporwave96 Demo</title>
     <style>
         body, html {
             margin: 0;
             overflow: hidden;
-            background: #000000;
+            background: #000;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -16,13 +16,11 @@
             user-select: none;
             font-family: Arial, sans-serif;
         }
-       
         #container {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-       
         canvas {
             image-rendering: pixelated;
             width: 512px;
@@ -30,7 +28,6 @@
             background: #000;
             cursor: crosshair;
         }
-       
         #controls {
             color: #ccc;
             margin-top: 10px;
@@ -43,165 +40,105 @@
     <div id="container">
         <canvas id="canvas"></canvas>
         <div id="controls">
-          <p>WASD</p>
-          <p>Shift & Space</p>
+            <p>WASD</p>
+            <p>Shift & Space</p>
         </div>
     </div>
-    
+
     <script src="engine.js"></script>
-    <script>
+    <script type="module">
+        import { setupFreecam } from './freecam.js';
+
         const canvas = document.getElementById('canvas');
         const engine = new RaytracingEngine(canvas, 128, 1000);
-        
-        const sphereId = engine.createObject(
-            0, 0, 0,
-            100,
-            'sphere',
-            {x:0, y:0, z:0},
-            {r:255, g:100, b:100},
-            0.4
-        );
-        
-        const planeId = engine.createObject(
-            0, -100, 0,
-            0,
-            'plane',
-            {x:0, y:0, z:0},
-            {r:200, g:200, b:255}
-        );
-        
-        const cubeId = engine.createObject(
-            200, 0, 0,
-            50,
-            'cube',
-            {x:0, y:0, z:0},
-            {r:100, g:255, b:100}
-        );
-        
-        const sphere2Id = engine.createObject(
-            -150, 50, 100,
-            60,
-            'sphere',
-            {x:0, y:0, z:0},
-            {r:255, g:255, b:100}
-        );
-        
-        const cube2Id = engine.createObject(
-            0, 50, 200,
-            40,
-            'cube',
-            {x:0.5, y:0, z:0},
-            {r:255, g:100, b:255}
-        );
-        
-        const keys = {};
-        let mouseDown = false;
-        const speed = 400;
-        const sensitivity = 0.002;
-        
-        window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
-        window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
-        
-        canvas.addEventListener('mousedown', e => {
-            mouseDown = true;
-            canvas.requestPointerLock();
-        });
-        
-        document.addEventListener('mouseup', e => {
-            mouseDown = false;
-            document.exitPointerLock();
-        });
-        
-        document.addEventListener('pointerlockchange', () => {
-            if (document.pointerLockElement !== canvas) mouseDown = false;
-        });
-        
-        document.addEventListener('mousemove', e => {
-            if (!mouseDown) return;
-            const rot = engine.getRotation();
-            rot.yaw -= e.movementX * sensitivity;
-            rot.pitch -= e.movementY * sensitivity;
-            rot.pitch = Math.max(-Math.PI/2 + 0.01, Math.min(Math.PI/2 - 0.01, rot.pitch));
-            engine.setRotation(rot.yaw, rot.pitch);
-        });
-        
-        function updatePlayer(dt) {
-            const cam = engine.getCamera();
-            const rot = engine.getRotation();
-            
-            const forward = {
-                x: Math.cos(rot.pitch) * Math.sin(rot.yaw),
-                y: Math.sin(rot.pitch),
-                z: Math.cos(rot.pitch) * Math.cos(rot.yaw)
-            };
-            
-            const up = {x: 0, y: 1, z: 0};
-            const right = {
-                x: forward.y * up.z - forward.z * up.y,
-                y: forward.z * up.x - forward.x * up.z,
-                z: forward.x * up.y - forward.y * up.x
-            };
-            
-            const rightLen = Math.sqrt(right.x * right.x + right.y * right.y + right.z * right.z);
-            if (rightLen > 0) {
-                right.x /= rightLen;
-                right.y /= rightLen;
-                right.z /= rightLen;
+
+        const scene = [
+            {   
+                type: 'sphere',
+                pos: { x: 0, y: 0, z: 0 },
+                s: 100,
+                rot: { x: 0, y: 0, z: 0 },
+                color: { r: 255, g: 100, b: 100 },
+                material: 'Metal',
+            },
+            {   
+                type: 'plane',
+                pos: { x: 0, y: -100, z: 0 },
+                s: 0,
+                rot: { x: 0, y: 0, z: 0 },
+                color: { r: 200, g: 200, b: 255 },
+                material: 'Default',
+                texture: 'grid',
+                texScale: 64
+            },
+            {   
+                type: 'cube',
+                pos: { x: 200, y: 0, z: 0 },
+                s: 50,
+                rot: { x: 0, y: 0, z: 0 },
+                color: { r: 100, g: 255, b: 100 },
+                material: 'Default',
+                texture: 'grid',
+                texScale: 64
+            },
+            {   
+                type: 'sphere',
+                pos: { x: -150, y: 50, z: 100 },
+                s: 60,
+                rot: { x: 0, y: 0, z: 0 },
+                color: { r: 255, g: 255, b: 100 },
+                material: 'Default',
+                texture: 'grid',
+                texScale: 8
+            },
+            {   
+                type: 'cube',
+                pos: { x: 0, y: 50, z: 200 },
+                s: 40,
+                rot: { x: 0.5, y: 0, z: 0 },
+                color: { r: 255, g: 100, b: 255 },
+                material: 'Metal',
+                texture: 'grid',
+                texScale: 64
             }
-            
-            if (keys['w']) {
-                cam.x += forward.x * speed * dt;
-                cam.y += forward.y * speed * dt;
-                cam.z += forward.z * speed * dt;
-            }
-            if (keys['s']) {
-                cam.x -= forward.x * speed * dt;
-                cam.y -= forward.y * speed * dt;
-                cam.z -= forward.z * speed * dt;
-            }
-            if (keys['a']) {
-                cam.x -= right.x * speed * dt;
-                cam.y -= right.y * speed * dt;
-                cam.z -= right.z * speed * dt;
-            }
-            if (keys['d']) {
-                cam.x += right.x * speed * dt;
-                cam.y += right.y * speed * dt;
-                cam.z += right.z * speed * dt;
-            }
-            if (keys[' ']) cam.y += speed * dt;
-            if (keys['shift']) cam.y -= speed * dt;
-            
-            engine.setCamera(cam.x, cam.y, cam.z);
-        }
-        
+        ];
+
+        engine.setScene(scene);
+
+        const updatePlayer = setupFreecam(engine, canvas);
+
         let lastTime = 0;
         let angle = 0;
         let time = 0;
-        
+
         function animate(currentTime) {
             const dt = (currentTime - lastTime) / 1000;
             lastTime = currentTime;
-            
+
             updatePlayer(dt);
-            
+
             angle += 0.7 * dt;
-            engine.updateObject(cubeId, {
-                rotation: {x: angle * 0.7, y: angle, z: angle * 0.5}
-            });
-            
+            scene[2].rot = { 
+                x: angle * 0.7, 
+                y: angle, 
+                z: angle * 0.5 
+            };
+
+            scene[2].color = { 
+                r: Math.abs(Math.sin(angle)) * 255, 
+                g: Math.abs(Math.sin(angle * 0.5)) * 255, 
+                b: Math.abs(Math.cos(angle * 0.8)) * 255
+            };
+
             time += 1.0 * dt;
             const radius = 400;
             const x = Math.cos(time) * radius - 50;
             const z = Math.sin(time) * radius + 50;
-            engine.updateObject(sphere2Id, {
-                position: engine.v3(x, 50 + Math.sin(time * 1) * 20, z)
-            });
-            
+            scene[3].pos = { x: x, y: 50 + Math.sin(time * 1) * 20, z: z };
+
             requestAnimationFrame(animate);
         }
 
-        
         engine.start();
         requestAnimationFrame(animate);
     </script>
