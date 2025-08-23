@@ -13,7 +13,7 @@
     async loadObjectHandler(){
       if(!window.ObjectHandler){
         let s=document.createElement('script');
-        s.src='./sceneManager.js';
+        s.src='./engine/sceneManager.js';
         document.head.appendChild(s);
         await new Promise(r=>s.onload=r);
       }

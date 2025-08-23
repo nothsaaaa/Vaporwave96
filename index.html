@@ -45,9 +45,9 @@
         </div>
     </div>
 
-    <script src="engine.js"></script>
+    <script src="/engine/engine.js"></script>
     <script type="module">
-        import { setupFreecam } from './freecam.js';
+        import { setupFreecam } from './engine/freecam.js';
 
         const canvas = document.getElementById('canvas');
         const engine = new RaytracingEngine(canvas, 128, 1000);
